@@ -1,4 +1,4 @@
-const Collaboration = require("../models/Collaboration"); // ✅ Declare only once
+const Collaboration = require("../models/Collaboration");
 const User = require("../models/User");
 
 // ✅ Search Users
@@ -7,12 +7,11 @@ exports.searchUsers = async (req, res) => {
     const { email } = req.query;
     if (!email) return res.status(400).json({ error: "Email query required" });
 
-    console.log("🔍 Searching for users with email containing:", email); // ✅ Debugging log
+    console.log("🔍 Searching for users with email:", email);
 
     const users = await User.find({ email: { $regex: email, $options: "i" } }).select("email _id");
 
-    console.log("✅ Users found:", users); // ✅ Debugging log
-
+    console.log("✅ Users found:", users);
     res.json(users);
   } catch (error) {
     console.error("🚨 Error searching users:", error);
@@ -21,21 +20,19 @@ exports.searchUsers = async (req, res) => {
 };
 
 // ✅ Send Request
-const Collaboration = require("../models/Collaboration");
-
 exports.sendRequest = async (req, res) => {
   try {
     const { sender, receiver } = req.body;
-    
+
     if (sender === receiver) {
       return res.status(400).json({ error: "You cannot send a request to yourself" });
     }
 
-    // ✅ Check if a request already exists
+    // Check if a request already exists
     const existingRequest = await Collaboration.findOne({
       $or: [
-        { sender, receiver }, // Request from sender to receiver
-        { sender: receiver, receiver: sender } // Request from receiver to sender (friendship already exists)
+        { sender, receiver },
+        { sender: receiver, receiver: sender }
       ],
       status: "pending",
     });
@@ -44,11 +41,11 @@ exports.sendRequest = async (req, res) => {
       return res.status(400).json({ error: "Request already sent or pending" });
     }
 
-    // ✅ Create a new friend request
+    // Create a new request
     const request = new Collaboration({ sender, receiver, status: "pending" });
     await request.save();
 
-    console.log("✅ Request sent:", request); // Debugging log
+    console.log("✅ Request sent:", request);
     res.status(201).json({ message: "Request sent successfully", request });
   } catch (error) {
     console.error("🚨 Error sending request:", error);
@@ -56,7 +53,7 @@ exports.sendRequest = async (req, res) => {
   }
 };
 
-// ✅ Accept Request
+// ✅ Accept Request - Ensure this function exists!
 exports.acceptRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -85,7 +82,7 @@ exports.getFriends = async (req, res) => {
   try {
     const { userId } = req.params;
     const friends = await Collaboration.find({
-      $or: [{ senderId: userId }, { receiverId: userId }],
+      $or: [{ sender: userId }, { receiver: userId }],
       status: "accepted",
     });
 
@@ -99,9 +96,10 @@ exports.getFriends = async (req, res) => {
 // ✅ Assign Task
 exports.assignTask = async (req, res) => {
   try {
-    const { senderId, receiverId, task } = req.body;
-    // Logic to store assigned task in the database
-
+    const { sender, receiver, task } = req.body;
+    
+    // Your logic to assign tasks (you need to define this)
+    
     res.status(200).json({ message: "Task assigned successfully" });
   } catch (error) {
     console.error("🚨 Error in assignTask:", error);
